@@ -3,6 +3,7 @@ package io.ebeaninternal.server.grammer;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.ebeaninternal.server.grammer.EqlTokenizer.F_FETCHBATCHSIZE;
 import static io.ebeaninternal.server.grammer.EqlTokenizer.F_LIMIT;
 import static io.ebeaninternal.server.grammer.EqlTokenizer.F_OFFSET;
 
@@ -14,6 +15,8 @@ public class EqlP {
   private static final String KEYWORD_FETCH = "fetch";
   private static final String KEYWORD_ORDER = "order";
   private static final String KEYWORD_BY = "by";
+  private static final String KEYWORD_QUERY = "query";
+  private static final String KEYWORD_LAZY = "lazy";
 
   private static final String NULLS = "nulls";
   private static final String ASC = "asc";
@@ -27,7 +30,7 @@ public class EqlP {
   }
 
   public void parse() {
-    final String token = tokenizer.nextToken();
+    final String token = next();
     switch (token) {
       case KEYWORD_SELECT:
         parseSelect();
@@ -47,23 +50,22 @@ public class EqlP {
   }
 
   private void parseLimit() {
-    int limit = tokenizer.nextTokenInt(F_LIMIT);
-    final String maybeOffset = tokenizer.nextToken();
-    if (maybeOffset == null) {
+    int limit = nextInt(F_LIMIT);
+    final String next = next();
+    if (next == null) {
       adapter.visitLimit(limit);
     } else {
-      if (!maybeOffset.equals(KEYWORD_OFFSET)) {
+      if (!next.equals(KEYWORD_OFFSET)) {
         throw iae("Expecting offset keyword");
       }
-      adapter.visitLimitOffset(limit, tokenizer.nextTokenInt(F_OFFSET));
+      adapter.visitLimitOffset(limit, nextInt(F_OFFSET));
     }
   }
 
-
   private void parseOrderBy() {
-    final String by = tokenizer.nextToken();
-    if (!by.equals(KEYWORD_BY)) {
-      throw iae("Expecting by keyword");
+    final String by = next();
+    if (!KEYWORD_BY.equals(by)) {
+      throw iae("Expecting by keyword for order by clause");
     }
     while(true) {
       if (!parseOrderByClause()) break;
@@ -74,21 +76,20 @@ public class EqlP {
     // read tokens until comma or limit
     List<String> tokens = new ArrayList<>(4);
     do {
-      String tk = tokenizer.nextToken();
-      if (tk == null) {
+      String next = next();
+      if (next == null) {
         pushOrderByClause(tokens);
         return false;
-      } else if (tk.equals(KEYWORD_LIMIT)) {
+      } else if (next.equals(KEYWORD_LIMIT)) {
         pushOrderByClause(tokens);
         parseLimit();
         return false;
         // push tokens, read limit
-      } else if (tk.equals(EToken.COMMA)) {
+      } else if (next.equals(EToken.COMMA)) {
         pushOrderByClause(tokens);
         return true;
-        //parseOrderByClause();
       } else {
-        tokens.add(tk);
+        tokens.add(next);
       }
     } while (true);
   }
@@ -118,12 +119,103 @@ public class EqlP {
     adapter.visitOrderByClause(path, asc, nulls, nullsFirstLast);
   }
 
-  private void parseFetch() {
+  private String fetchOption;
+  private String fetchPath;
+  private String fetchProperties;
+  private int fetchBatchSize;
 
+  private void beginFetchClause() {
+    fetchOption = null;
+    fetchBatchSize = 0;
+    fetchPath = null;
+    fetchProperties = null;
+  }
+
+  private void endFetchClause() {
+    adapter.visitFetch(fetchPath, fetchProperties, fetchOption, fetchBatchSize);
+  }
+
+  private void parseFetch() {
+    // 'fetch' fetch_option? fetch_path_path fetch_property_set?
+    beginFetchClause();
+    final String next = next();
+    if (next == null) {
+      throw iae("Empty fetch clause? Expecting a fetch path");
+    }
+    switch (next) {
+      case KEYWORD_QUERY:
+        parseFetchOption(KEYWORD_QUERY);
+        break;
+      case KEYWORD_LAZY:
+        parseFetchOption(KEYWORD_LAZY);
+        break;
+      default:
+        parseFetchPath(next);
+    }
+  }
+
+  private void parseFetchPath(String token) {
+    fetchPath = token;
+    final String next = next();
+    if (EToken.OPEN_BRACKET.equals(next)) {
+      fetchProperties = tokenizer.nextUntilCloseBracket();
+      parseNextFetch(next());
+    } else {
+      parseNextFetch(next);
+    }
+  }
+
+  private void parseNextFetch(String next) {
+    endFetchClause();
+    if (next == null) {
+      return;
+    }
+    switch (next) {
+      case KEYWORD_FETCH:
+        parseFetch();
+        break;
+      case KEYWORD_ORDER:
+        parseOrderBy();
+        break;
+      case KEYWORD_LIMIT:
+        parseLimit();
+        break;
+      default:
+        throw iae("Expecting keyword fetch|order|limit but got " + next);
+    }
+  }
+
+  private void parseFetchOption(String fetchOption) {
+    this.fetchOption = fetchOption;
+    final String next = next();
+    if (next == null) {
+      throw iae("Expecting fetch batch size");
+    }
+    if (EToken.OPEN_BRACKET.equals(next)) {
+      parseFetchOptionBatchSize();
+    } else {
+      parseFetchPath(next);
+    }
+  }
+
+  private void parseFetchOptionBatchSize() {
+    fetchBatchSize = nextInt(F_FETCHBATCHSIZE);
+    if (!EToken.CLOSE_BRACKET.equals(next())) {
+      throw iae("Expecting ) close bracket for fetch batch size");
+    }
+    parseFetchPath(next());
   }
 
   private void parseSelect() {
 
+  }
+
+  private int nextInt(int field) {
+    return tokenizer.nextTokenInt(field);
+  }
+
+  private String next() {
+    return tokenizer.nextToken();
   }
 
   private IllegalArgumentException iae(String prefix) {

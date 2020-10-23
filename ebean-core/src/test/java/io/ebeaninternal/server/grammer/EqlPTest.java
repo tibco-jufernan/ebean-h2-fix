@@ -15,6 +15,31 @@ import static org.mockito.Mockito.verify;
 public class EqlPTest {
 
   @Test
+  public void parse_fetch_path() {
+    verify(spyAdapter("fetch billingAddress")).visitFetch("billingAddress", null, null, 0);
+  }
+
+  @Test
+  public void parse_fetch_path_properties() {
+    verify(spyAdapter("fetch billingAddress (line1, max(city))")).visitFetch("billingAddress", "line1, max(city)", null, 0);
+    // old style hints
+    verify(spyAdapter("fetch billingAddress (+query(20), line1, city)")).visitFetch("billingAddress", "+query(20), line1, city", null, 0);
+    verify(spyAdapter("fetch billingAddress (line1, city, +lazy(50))")).visitFetch("billingAddress", "line1, city, +lazy(50)", null, 0);
+  }
+
+  @Test
+  public void parse_fetch_query_path() {
+    verify(spyAdapter("fetch query billingAddress")).visitFetch("billingAddress", null, "query", 0);
+    verify(spyAdapter("fetch lazy billingAddress")).visitFetch("billingAddress", null, "lazy", 0);
+  }
+
+  @Test
+  public void parse_fetch_option_path_properties() {
+    verify(spyAdapter("fetch lazy(40) billingAddress (line1, city)")).visitFetch("billingAddress", "line1, city", "lazy", 40);
+    verify(spyAdapter("fetch query(80) billingAddress (line1, max(city))")).visitFetch("billingAddress", "line1, max(city)", "query", 80);
+  }
+
+  @Test
   public void parse_limit_offset() {
     verify(spyAdapter("limit 10 offset 11")).visitLimitOffset(10, 11);
     verify(spyAdapter("limit 42 offset 99")).visitLimitOffset(42, 99);

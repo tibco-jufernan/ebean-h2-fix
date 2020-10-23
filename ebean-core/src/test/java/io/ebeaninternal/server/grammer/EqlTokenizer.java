@@ -27,6 +27,32 @@ public class EqlTokenizer {
     return source;
   }
 
+  /**
+   * Read everything until a closing bracket.
+   */
+  public String nextUntilCloseBracket() {
+    tokenStart = pos;
+    int depth = 1;
+    while (pos < sourceLength) {
+      final char ch = sourceChars[pos];
+      switch (ch) {
+        case C_OPENBRACKET: {
+          depth++;
+          break;
+        }
+        case C_CLOSEBRACKET: {
+          --depth;
+          if (depth == 0) {
+            return source.substring(tokenStart, pos++);
+          }
+          break;
+        }
+      }
+      pos++;
+    }
+    throw new IllegalStateException("Unable to find matching closing bracket ) " + positionInSource());
+  }
+
   public String nextToken() {
     if (!skip()) {
       return null;
@@ -127,11 +153,14 @@ public class EqlTokenizer {
         return "limit";
       case F_OFFSET:
         return "offset";
+      case F_FETCHBATCHSIZE:
+        return "fetch batch size";
     }
     return "<Unknown field " + fieldId + ">";
   }
 
   static final int F_LIMIT = 10;
   static final int F_OFFSET = 11;
+  static final int F_FETCHBATCHSIZE = 12;
 
 }
