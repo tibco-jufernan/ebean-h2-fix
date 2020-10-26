@@ -157,6 +157,23 @@ public class FetchConfig implements Serializable {
   }
 
   /**
+   * Return FetchConfig given the fetc option and batch size.
+   */
+  public static FetchConfig of(String option, int batchSize) {
+    if (option == null) {
+      return null;
+    }
+    FetchConfig config = new FetchConfig();
+    switch (option) {
+      case "lazy":
+        return config.lazy(batchSize);
+      case "cache":
+        return config.cache();
+    }
+    return config.query(batchSize);
+  }
+
+  /**
    * Specify that this path should be lazy loaded using the default batch load
    * size.
    */

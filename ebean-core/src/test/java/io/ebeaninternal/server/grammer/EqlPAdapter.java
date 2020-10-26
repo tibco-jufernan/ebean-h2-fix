@@ -12,6 +12,19 @@ public class EqlPAdapter<T> {
     this.query = query;
   }
 
+  public void visitSelect(boolean distinct, String properties) {
+    if (distinct) {
+      query.setDistinct(true);
+    }
+    if (properties != null) {
+      query.select(properties);
+    }
+  }
+
+  public void visitFetch(String path, String properties, String option, int batchSize) {
+    query.fetch(path, properties, FetchConfig.of(option, batchSize));
+  }
+
   public void visitOrderByClause(String path, boolean asc, String nulls, String highLow) {
     query.order().add(new OrderBy.Property(path, asc, nulls, highLow));
   }
@@ -25,15 +38,4 @@ public class EqlPAdapter<T> {
     query.setFirstRow(offset);
   }
 
-  public void visitFetch(String path, String properties, String option, int batchSize) {
-    FetchConfig config = null;
-    if (option != null) {
-      //TODO: Parse into FetchConfig ...
-      config = new FetchConfig();
-//      if (fetchBatchSize > 0) {
-//        config.
-//      }
-    }
-    query.fetch(path, properties, config);
-  }
 }

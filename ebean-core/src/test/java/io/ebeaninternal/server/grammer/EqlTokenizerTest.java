@@ -142,4 +142,57 @@ public class EqlTokenizerTest {
     assertEquals("(any (one(two)) thing) but...", tokenizer.nextUntilCloseBracket());
     assertNull(tokenizer.nextToken());
   }
+
+  @Test
+  public void nextUntilKeyword() {
+    assertSelectFoo(new EqlTokenizer("select foo,bar,baz fetch zap"));
+    assertSelectFoo(new EqlTokenizer("select   foo,bar,baz    fetch zap"));
+    assertSelectFoo(new EqlTokenizer("select   foo,bar,baz fetch zap"));
+    assertSelectFoo(new EqlTokenizer("select  foo,bar,baz   fetch zap"));
+  }
+
+  private void assertSelectFoo(EqlTokenizer tokenizer) {
+    assertEquals("select", tokenizer.nextToken());
+    final int from = tokenizer.pos();
+    assertEquals("foo", tokenizer.nextToken());
+    assertEquals("foo,bar,baz", tokenizer.nextUntilKeyword(from));
+
+    assertEquals("fetch", tokenizer.lastKeyword());
+  }
+
+  @Test
+  public void nextUntilKeyword_quotes() {
+    final EqlTokenizer tokenizer = new EqlTokenizer("select foo, 'fetch', baz fetch zap");
+
+    assertEquals("select", tokenizer.nextToken());
+    final int from = tokenizer.pos();
+    assertEquals("foo", tokenizer.nextToken());
+    assertEquals("foo, 'fetch', baz", tokenizer.nextUntilKeyword(from));
+
+    assertEquals("fetch", tokenizer.lastKeyword());
+  }
+
+  @Test
+  public void nextUntilKeyword_quotes_andOddBrackets() {
+    final EqlTokenizer tokenizer = new EqlTokenizer("select foo, 'fet(ch', baz fetch zap");
+
+    assertEquals("select", tokenizer.nextToken());
+    final int from = tokenizer.pos();
+    assertEquals("foo", tokenizer.nextToken());
+    assertEquals("foo, 'fet(ch', baz", tokenizer.nextUntilKeyword(from));
+
+    assertEquals("fetch", tokenizer.lastKeyword());
+  }
+
+  @Test
+  public void nextUntilKeyword_brackets() {
+    final EqlTokenizer tokenizer = new EqlTokenizer("select foo, fetch(), baz fetch zap");
+
+    assertEquals("select", tokenizer.nextToken());
+    final int from = tokenizer.pos();
+    assertEquals("foo", tokenizer.nextToken());
+    assertEquals("foo, fetch(), baz", tokenizer.nextUntilKeyword(from));
+
+    assertEquals("fetch", tokenizer.lastKeyword());
+  }
 }

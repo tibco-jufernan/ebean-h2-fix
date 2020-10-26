@@ -1,6 +1,5 @@
 package io.ebean;
 
-import io.ebean.FetchConfig;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,7 +7,53 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class FetchConfigTest {
 
   @Test
-  public void testLazy() throws Exception {
+  public void lazy_of() {
+
+    FetchConfig config = FetchConfig.of("lazy", 0);
+
+    assertThat(config.getLazyBatchSize()).isEqualTo(0);
+    assertThat(config.getQueryBatchSize()).isEqualTo(-1);
+    assertThat(config.isQueryAll()).isEqualTo(false);
+  }
+
+  @Test
+  public void lazy_of_plusBatch() {
+
+    FetchConfig config = FetchConfig.of("lazy", 50);
+
+    assertThat(config.getLazyBatchSize()).isEqualTo(50);
+    assertThat(config.getQueryBatchSize()).isEqualTo(-1);
+    assertThat(config.isQueryAll()).isEqualTo(false);
+  }
+
+  @Test
+  public void lazy_of_cache() {
+    FetchConfig config = FetchConfig.of("cache", 0);
+    assertThat(config.isCache()).isTrue();
+  }
+
+  @Test
+  public void lazy_of_query() {
+
+    FetchConfig config = FetchConfig.of("query", 0);
+
+    assertThat(config.getQueryBatchSize()).isEqualTo(0);
+    assertThat(config.getLazyBatchSize()).isEqualTo(-1);
+    assertThat(config.isQueryAll()).isEqualTo(true);
+  }
+
+  @Test
+  public void lazy_of_query_batchSize() {
+
+    FetchConfig config = FetchConfig.of("query", 89);
+
+    assertThat(config.getQueryBatchSize()).isEqualTo(89);
+    assertThat(config.getLazyBatchSize()).isEqualTo(-1);
+    assertThat(config.isQueryAll()).isEqualTo(true);
+  }
+
+  @Test
+  public void testLazy() {
 
     FetchConfig config = new FetchConfig().lazy();
 
@@ -18,7 +63,7 @@ public class FetchConfigTest {
   }
 
   @Test
-  public void testLazy_withParameter() throws Exception {
+  public void testLazy_withParameter() {
 
     FetchConfig config = new FetchConfig().lazy(50);
 
@@ -28,7 +73,7 @@ public class FetchConfigTest {
   }
 
   @Test
-  public void testQuery() throws Exception {
+  public void testQuery() {
 
     FetchConfig config = new FetchConfig().query();
 
@@ -38,7 +83,7 @@ public class FetchConfigTest {
   }
 
   @Test
-  public void testQuery_withParameter() throws Exception {
+  public void testQuery_withParameter() {
 
     FetchConfig config = new FetchConfig().query(50);
 
@@ -48,7 +93,7 @@ public class FetchConfigTest {
   }
 
   @Test
-  public void testQueryFirst() throws Exception {
+  public void testQueryFirst() {
 
     FetchConfig config = new FetchConfig().queryFirst(50);
 
@@ -58,7 +103,7 @@ public class FetchConfigTest {
   }
 
   @Test
-  public void testQueryAndLazy_withParameters() throws Exception {
+  public void testQueryAndLazy_withParameters() {
 
     FetchConfig config = new FetchConfig().query(50).lazy(10);
 
@@ -68,7 +113,7 @@ public class FetchConfigTest {
   }
 
   @Test
-  public void testQueryAndLazy() throws Exception {
+  public void testQueryAndLazy() {
 
     FetchConfig config = new FetchConfig().query(50).lazy();
 
@@ -79,79 +124,79 @@ public class FetchConfigTest {
 
 
   @Test
-  public void testEquals_when_noOptions() throws Exception {
+  public void testEquals_when_noOptions() {
 
     assertSame(new FetchConfig(), new FetchConfig());
   }
 
   @Test
-  public void testEquals_when_query_50_lazy_40() throws Exception {
+  public void testEquals_when_query_50_lazy_40() {
 
     assertSame(new FetchConfig().query(50).lazy(40), new FetchConfig().query(50).lazy(40));
   }
 
   @Test
-  public void testEquals_when_query_50_lazy() throws Exception {
+  public void testEquals_when_query_50_lazy() {
 
     assertSame(new FetchConfig().query(50).lazy(), new FetchConfig().query(50).lazy());
   }
 
   @Test
-  public void testEquals_when_query_50() throws Exception {
+  public void testEquals_when_query_50() {
 
     assertSame(new FetchConfig().query(50), new FetchConfig().query(50));
   }
 
   @Test
-  public void testEquals_when_queryFirst_50_lazy_40() throws Exception {
+  public void testEquals_when_queryFirst_50_lazy_40() {
 
     assertSame(new FetchConfig().queryFirst(50).lazy(40), new FetchConfig().queryFirst(50).lazy(40));
   }
 
   @Test
-  public void testEquals_when_queryFirst_50_lazy() throws Exception {
+  public void testEquals_when_queryFirst_50_lazy() {
 
     assertSame(new FetchConfig().queryFirst(50).lazy(), new FetchConfig().queryFirst(50).lazy());
   }
 
   @Test
-  public void testEquals_when_queryFirst_50() throws Exception {
+  public void testEquals_when_queryFirst_50() {
 
     assertSame(new FetchConfig().queryFirst(50), new FetchConfig().queryFirst(50));
   }
 
   @Test
-  public void testNotEquals_when_query_50() throws Exception {
+  public void testNotEquals_when_query_50() {
 
     assertDifferent(new FetchConfig().query(50), new FetchConfig().query(40));
   }
 
   @Test
-  public void testNotEquals_when_query_50_lazy() throws Exception {
+  public void testNotEquals_when_query_50_lazy() {
 
     assertDifferent(new FetchConfig().query(50), new FetchConfig().query(50).lazy());
   }
 
   @Test
-  public void testNotEquals_when_query_50_lazy_40() throws Exception {
+  public void testNotEquals_when_query_50_lazy_40() {
 
     assertDifferent(new FetchConfig().query(50), new FetchConfig().query(50).lazy(40));
   }
 
   @Test
-  public void testNotEquals_when_queryFirst_50() throws Exception {
+  public void testNotEquals_when_queryFirst_50() {
 
     assertDifferent(new FetchConfig().queryFirst(50), new FetchConfig().queryFirst(40));
   }
 
   @Test
-  public void testNotEquals_when_queryFirst_50_lazy() throws Exception {
+  public void testNotEquals_when_queryFirst_50_lazy() {
 
     assertDifferent(new FetchConfig().queryFirst(50), new FetchConfig().queryFirst(50).lazy());
   }
 
   @Test
-  public void testNotEquals_when_queryFirst_50_lazy_40() throws Exception {
+  public void testNotEquals_when_queryFirst_50_lazy_40() {
 
     assertDifferent(new FetchConfig().queryFirst(50), new FetchConfig().queryFirst(50).lazy(40));
   }

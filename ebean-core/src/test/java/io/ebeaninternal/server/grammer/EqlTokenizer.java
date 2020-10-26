@@ -4,17 +4,23 @@ import static java.lang.Character.isWhitespace;
 
 public class EqlTokenizer {
 
+  static final int F_LIMIT = 10;
+  static final int F_OFFSET = 11;
+  static final int F_FETCHBATCHSIZE = 12;
+
   private static final char C_OPENBRACKET = '(';
   private static final char C_CLOSEBRACKET = ')';
   private static final char C_COMMA = ',';
   private static final char C_SINGLEQUOTE = '\'';
   private static final char C_QUOTEESCAPE = '\\';
+  private static final char C_SPACE = ' ';
 
   private final String source;
   private final int sourceLength;
   private final char[] sourceChars;
   private int pos;
   private int tokenStart;
+  private String lastKeyword;
 
   public EqlTokenizer(String source) {
     this.source = source;
@@ -25,6 +31,86 @@ public class EqlTokenizer {
   @Override
   public String toString() {
     return source;
+  }
+
+  public int pos() {
+    return pos;
+  }
+
+  public String lastKeyword() {
+    return lastKeyword;
+  }
+
+  public String nextUntilKeyword(int from) {
+    // move until keyword fetch|where|order|limit
+    int blockStart = from;
+    while(true) {
+      final String next = nextKeyword();
+      if (next == null) {
+        return source.substring(blockStart);
+      }
+      switch (next) {
+        case "fetch":
+        case "where":
+        case "order":
+        case "limit": {
+          int end = this.pos - next.length() - 1;
+          lastKeyword = next;
+          return source.substring(blockStart, end).trim();
+        }
+      }
+    }
+  }
+
+  /**
+   * Return the next keyword taking into account quotes and brackets.
+   */
+  private String nextKeyword() {
+    boolean quoting = false;
+    int bracket = 0;
+    tokenStart = pos;
+    while (pos < sourceLength) {
+      final char ch = sourceChars[pos];
+      switch (ch) {
+        case C_SPACE: {
+          if (bracket == 0 && !quoting) {
+            if (tokenStart == -1) {
+              tokenStart = pos; // potential start of keyword
+            } else {
+              return source.substring(tokenStart, pos++);
+            }
+          }
+          break;
+        }
+        case C_SINGLEQUOTE: {
+          if (bracket == 0) {
+            quoting = !quoting; // swap quoting mode
+            tokenStart = -1; // not a keyword
+          }
+          break;
+        }
+        case C_QUOTEESCAPE:
+          if (quoting) {
+            pos++;
+          }
+          break;
+        case C_OPENBRACKET: {
+          if (!quoting) {
+            bracket++;
+            tokenStart = -1; // not a keyword
+          }
+          break;
+        }
+        case C_CLOSEBRACKET: {
+          if (!quoting) {
+            --bracket;
+          }
+          break;
+        }
+      }
+      pos++;
+    }
+    return null; // no next keyword
   }
 
   /**
@@ -158,9 +244,5 @@ public class EqlTokenizer {
     }
     return "<Unknown field " + fieldId + ">";
   }
-
-  static final int F_LIMIT = 10;
-  static final int F_OFFSET = 11;
-  static final int F_FETCHBATCHSIZE = 12;
 
 }

@@ -15,6 +15,42 @@ import static org.mockito.Mockito.verify;
 public class EqlPTest {
 
   @Test
+  public void parse_select_brackets() {
+    verify(spyAdapter("select (name)")).visitSelect(false, "name");
+    verify(spyAdapter("select ( name )")).visitSelect(false, "name");
+    verify(spyAdapter("select ( name, dob )")).visitSelect(false, "name, dob");
+    verify(spyAdapter("select (  name ,dob  )")).visitSelect(false, "name ,dob");
+    verify(spyAdapter("select (name,dob) fetch address")).visitSelect(false, "name,dob");
+  }
+
+  @Test
+  public void parse_select() {
+    verify(spyAdapter("select name")).visitSelect(false, "name");
+    verify(spyAdapter("select name ")).visitSelect(false, "name");
+    verify(spyAdapter("select name, dob")).visitSelect(false, "name, dob");
+    verify(spyAdapter("select name ,dob")).visitSelect(false, "name ,dob");
+    verify(spyAdapter("select name,dob fetch address")).visitSelect(false, "name,dob");
+  }
+
+  @Test
+  public void parse_select_distinct() {
+    verify(spyAdapter("select distinct name")).visitSelect(true, "name");
+    verify(spyAdapter("select distinct name ")).visitSelect(true, "name");
+    verify(spyAdapter("select distinct name, dob")).visitSelect(true, "name, dob");
+    verify(spyAdapter("select distinct name ,dob")).visitSelect(true, "name ,dob");
+    verify(spyAdapter("select distinct name,dob fetch address")).visitSelect(true, "name,dob");
+  }
+
+  @Test
+  public void parse_select_distinct_brackets() {
+    verify(spyAdapter("select distinct (name)")).visitSelect(true, "name");
+    verify(spyAdapter("select distinct ( name )")).visitSelect(true, "name");
+    verify(spyAdapter("select distinct ( name, dob ) ")).visitSelect(true, "name, dob");
+    verify(spyAdapter("select distinct ( name ,dob )")).visitSelect(true, "name ,dob");
+    verify(spyAdapter("select distinct (name,dob) fetch address")).visitSelect(true, "name,dob");
+  }
+
+  @Test
   public void parse_fetch_path() {
     verify(spyAdapter("fetch billingAddress")).visitFetch("billingAddress", null, null, 0);
   }

@@ -17,6 +17,7 @@ public class EqlP {
   private static final String KEYWORD_BY = "by";
   private static final String KEYWORD_QUERY = "query";
   private static final String KEYWORD_LAZY = "lazy";
+  private static final String KEYWORD_DISTINCT = "distinct";
 
   private static final String NULLS = "nulls";
   private static final String ASC = "asc";
@@ -24,9 +25,31 @@ public class EqlP {
   private final EqlPAdapter<?> adapter;
   private final EqlTokenizer tokenizer;
 
+  private boolean selectDistinct;
+  private String selectProperties;
+  private String fetchOption;
+  private String fetchPath;
+  private String fetchProperties;
+  private int fetchBatchSize;
+
   public EqlP(EqlPAdapter<?> adapter, String eql) {
     this.adapter = adapter;
     this.tokenizer = new EqlTokenizer(eql);
+  }
+
+  private void endSelectClause() {
+    adapter.visitSelect(selectDistinct, selectProperties);
+  }
+
+  private void beginFetchClause() {
+    fetchOption = null;
+    fetchBatchSize = 0;
+    fetchPath = null;
+    fetchProperties = null;
+  }
+
+  private void endFetchClause() {
+    adapter.visitFetch(fetchPath, fetchProperties, fetchOption, fetchBatchSize);
   }
 
   public void parse() {
@@ -119,22 +142,6 @@ public class EqlP {
     adapter.visitOrderByClause(path, asc, nulls, nullsFirstLast);
   }
 
-  private String fetchOption;
-  private String fetchPath;
-  private String fetchProperties;
-  private int fetchBatchSize;
-
-  private void beginFetchClause() {
-    fetchOption = null;
-    fetchBatchSize = 0;
-    fetchPath = null;
-    fetchProperties = null;
-  }
-
-  private void endFetchClause() {
-    adapter.visitFetch(fetchPath, fetchProperties, fetchOption, fetchBatchSize);
-  }
-
   private void parseFetch() {
     // 'fetch' fetch_option? fetch_path_path fetch_property_set?
     beginFetchClause();
@@ -167,6 +174,10 @@ public class EqlP {
 
   private void parseNextFetch(String next) {
     endFetchClause();
+    parseKeyword(next);
+  }
+
+  private void parseKeyword(String next) {
     if (next == null) {
       return;
     }
@@ -207,7 +218,24 @@ public class EqlP {
   }
 
   private void parseSelect() {
-
+    // 'select' distinct? select_properties
+    // select_properties =  : '(' fetch_property_group ')' | fetch_property_group
+    int from = tokenizer.pos();
+    String next = next();
+    if (KEYWORD_DISTINCT.equals(next)) {
+      from = tokenizer.pos();
+      selectDistinct = true;
+      next = next();
+    }
+    if (EToken.OPEN_BRACKET.equals(next)) {
+      selectProperties = tokenizer.nextUntilCloseBracket().trim();
+      endSelectClause();
+      parseKeyword(next());
+    } else {
+      selectProperties = tokenizer.nextUntilKeyword(from).trim();
+      endSelectClause();
+      parseKeyword(tokenizer.lastKeyword());
+    }
   }
 
   private int nextInt(int field) {
