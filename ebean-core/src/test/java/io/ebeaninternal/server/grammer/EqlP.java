@@ -13,6 +13,7 @@ public class EqlP {
   private static final String KEYWORD_LIMIT = "limit";
   private static final String KEYWORD_SELECT = "select";
   private static final String KEYWORD_FETCH = "fetch";
+  private static final String KEYWORD_WHERE = "where";
   private static final String KEYWORD_ORDER = "order";
   private static final String KEYWORD_BY = "by";
   private static final String KEYWORD_QUERY = "query";
@@ -61,6 +62,9 @@ public class EqlP {
       case KEYWORD_FETCH:
         parseFetch();
         break;
+      case KEYWORD_WHERE:
+        parseWhere();
+        break;
       case KEYWORD_ORDER:
         parseOrderBy();
         break;
@@ -70,6 +74,38 @@ public class EqlP {
       default:
         throw iae("Expecting keyword select|fetch|order|limit but got " + token);
     }
+  }
+
+  private void parseWhere() {
+    // where expr|( |and|or|not|()
+    // where e0 or e1 or e2 or
+    // where (e0 or e1) and (e3 and e4)
+    // where (e0 or not e1) and (e3 and not e4)
+    // where e0 and not (e1)
+    final String next = next();
+    switch (next) {
+      case EToken.OPEN_BRACKET: {
+
+      }
+    }
+    // conditional_expression : conditional_term ('or' conditional_term)*
+    // conditional_term : conditional_factor ('and' conditional_factor)*
+    // conditional_factor : 'not'? conditional_primary
+    // conditional_primary : any_expression  | '(' conditional_expression ')'
+
+    // any_expression
+//    : comparison_expression
+//      | like_expression
+//      | inrange_expression
+//      | between_expression
+//      | propertyBetween_expression
+//      | inOrEmpty_expression
+//      | in_expression
+//      | isNull_expression
+//      | isNotNull_expression
+//      | isEmpty_expression
+//      | isNotEmpty_expression
+//      | '(' any_expression ')'
   }
 
   private void parseLimit() {
@@ -184,6 +220,9 @@ public class EqlP {
     switch (next) {
       case KEYWORD_FETCH:
         parseFetch();
+        break;
+      case KEYWORD_WHERE:
+        parseWhere();
         break;
       case KEYWORD_ORDER:
         parseOrderBy();
