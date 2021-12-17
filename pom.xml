@@ -42,11 +42,11 @@
     <jackson.version>2.12.1</jackson.version>
     <ebean-ddl-runner.version>1.2</ebean-ddl-runner.version>
     <ebean-migration-auto.version>1.1</ebean-migration-auto.version>
-    <ebean-migration.version>12.12.1</ebean-migration.version>
+    <ebean-migration.version>12.12.3</ebean-migration.version>
     <ebean-test-docker.version>4.2</ebean-test-docker.version>
     <ebean-datasource.version>7.3</ebean-datasource.version>
-    <ebean-agent.version>12.13.0</ebean-agent.version>
-    <ebean-maven-plugin.version>12.13.0</ebean-maven-plugin.version>
+    <ebean-agent.version>12.13.2</ebean-agent.version>
+    <ebean-maven-plugin.version>12.13.2</ebean-maven-plugin.version>
   </properties>
 
   <dependencies>
@@ -54,14 +54,14 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.7.30</version>
+      <version>1.7.32</version>
       <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
+      <version>1.2.8</version>
       <scope>test</scope>
     </dependency>
 
