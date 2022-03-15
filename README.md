@@ -1,3 +1,11 @@
+# Notes on this fork
+
+This fork exists to fix an incompatibility issue between Ebean and H2 2.x. The fix exists on the branch `h2-compatibility-fix`. The only change
+made is to the file [ScalarTypeClob](ebean-core/src/main/java/io/ebeaninternal/server/type/ScalarTypeClob.java) where `bind()` needed to be overridden
+so that `setClob()` was properly called instead of `setString()`.
+
+# Below is the original Ebean README
+
 [![Build](https://github.com/ebean-orm/ebean/actions/workflows/build.yml/badge.svg)](https://github.com/ebean-orm/ebean/actions/workflows/build.yml)
 [![Maven Central : ebean](https://maven-badges.herokuapp.com/maven-central/io.ebean/ebean/badge.svg)](https://maven-badges.herokuapp.com/maven-central/io.ebean/ebean)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/ebean-orm/ebean/blob/master/LICENSE)
@@ -50,4 +58,3 @@ Goto [https://ebean.io/docs/](https://ebean.io/docs/)
 [Maven central - ebean](http://search.maven.org/#search%7Cgav%7C1%7Cg%3A%22io.ebean%22%20AND%20a%3A%22ebean%22 "maven central ebean")
 
 [Maven central - all related projects](http://search.maven.org/#search%7Cga%7C1%7Cebean "maven central all related projects")
-
