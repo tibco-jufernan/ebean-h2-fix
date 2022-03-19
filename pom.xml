@@ -91,6 +91,7 @@
     <module>ebean-querybean</module>
     <module>ebean-postgis</module>
     <module>ebean-redis</module>
+    <module>ebean-agent</module>
 <!--    <module>ebean-kotlin</module>-->
 
   </modules>

@@ -4,6 +4,8 @@ This fork exists to fix an incompatibility issue between Ebean and H2 2.x. The f
 made is to the file [ScalarTypeClob](ebean-core/src/main/java/io/ebeaninternal/server/type/ScalarTypeClob.java) where `bind()` needed to be overridden
 so that `setClob()` was properly called instead of `setString()`.
 
+Also, ebean-agent has been added to this repository for its inclusion with this fork.
+
 # Below is the original Ebean README
 
 [![Build](https://github.com/ebean-orm/ebean/actions/workflows/build.yml/badge.svg)](https://github.com/ebean-orm/ebean/actions/workflows/build.yml)
